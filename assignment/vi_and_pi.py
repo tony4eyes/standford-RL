@@ -53,14 +53,16 @@ def policy_evaluation(P, nS, nA, policy, gamma=0.9, tol=1e-3):
     """
     prev_value_function = 999*np.ones(nS)
     value_function = np.zeros(nS)
+
     ############################
     # YOUR IMPLEMENTATION HERE #
-
+    
     while not np.all(np.linalg.norm(value_function - prev_value_function) <= tol):
         prev_value_function = value_function.copy()
+        value_function = np.zeros(nS)
         for i in range(nS):
             for prob, next_state, reward, terminal in P[i][policy[i]]:
-                value_function[i] += prob*(reward + gamma*value_function(next_state))
+                value_function[i] += prob*(reward + gamma*prev_value_function[next_state])
 
     ############################
     return value_function
@@ -87,7 +89,7 @@ def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
 """
 
     new_policy = np.zeros(nS, dtype='int')
-    Q = np.zeros(nS,nA)
+    Q = np.zeros((nS,nA))
 	############################
 	# YOUR IMPLEMENTATION HERE #
     for i in range(nS):
@@ -96,7 +98,7 @@ def policy_improvement(P, nS, nA, value_from_policy, policy, gamma=0.9):
                 if terminal:
                     Q[i][j] += prob*reward
                 else:
-                    Q[i][j] += prob*(reward + gamma*value_from_policy[i])
+                    Q[i][j] += prob*(reward + gamma*value_from_policy[next_state])
     
     new_policy = np.argmax(Q,axis = 1)
         
@@ -126,9 +128,11 @@ def policy_iteration(P, nS, nA, gamma=0.9, tol=10e-3):
     value_function = np.zeros(nS)
     policy = np.zeros(nS, dtype=int)
     opt_policy = np.ones(nS, dtype=int)
+
     ############################
     # YOUR IMPLEMENTATION HERE #
     while not np.array_equal(policy, opt_policy):
+        #print("Policy_Iteration_Values: ", value_function, "\nPolicy_Iteration_IntPolicy: ", policy)
         policy = opt_policy
         value_function = policy_evaluation(P, nS, nA, policy, gamma, tol)
         opt_policy = policy_improvement(P, nS, nA, value_function, policy, gamma)
@@ -161,7 +165,7 @@ def value_iteration(P, nS, nA, gamma=0.9, tol=1e-3):
     # YOUR IMPLEMENTATION HERE #
 
     while not np.all(np.linalg.norm(value_function - prev_value_function) <= tol):
-        prev_value_function = value_function
+        prev_value_function = value_function.copy()
         for i in range(nS):
             max_value_function = 0
             for j in range(nA):
@@ -171,9 +175,9 @@ def value_iteration(P, nS, nA, gamma=0.9, tol=1e-3):
                         if Cur_value_function > max_value_function:
                             max_value_function = Cur_value_function
                             policy[i] = j
-            value_function[i] = max_value_function       
+            value_function[i] = max_value_function
+            #("Value_Iteration_Values: ", value_function, "\nValue_Iteration_IntPolicy: ", policy)
                             
-
     ############################
     return value_function, policy
 
