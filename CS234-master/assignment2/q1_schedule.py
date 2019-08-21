@@ -21,26 +21,24 @@ class LinearSchedule(object):
         Updates epsilon
 
         Args:
-            t: (int) nth frames
+            t: int
+                frame number
         """
-        ##############################################################
+        ##################################################0############
         """
         TODO: modify self.epsilon such that 
-               for t = 0, self.epsilon = self.eps_begin
-               for t = self.nsteps, self.epsilon = self.eps_end
-               linear decay between the two
-
-              self.epsilon should never go under self.eps_end
+			  it is a linear interpolation from self.eps_begin to 
+			  self.eps_end as t goes from 0 to self.nsteps
+			  For t > self.nsteps self.epsilon remains constant
         """
         ##############################################################
         ################ YOUR CODE HERE - 3-4 lines ################## 
+        if t < self.nsteps:
+            self.epsilon = self.eps_begin + t*(self.eps_end - self.eps_begin)/self.nsteps
+        else:
+            self.epsilon = self.eps_end
+        pass
 
-        value = np.linspace(self.eps_end, self.eps_begin, self.nsteps+1)
-        #if t > self.nsteps:
-        #    self.epsilon = self.eps_end
-        #else:
-        #    self.epsilon = value[t]
-        self.epsilon = value[t] if t <= self.nsteps else self.eps_end 
         ##############################################################
         ######################## END YOUR CODE ############## ########
 
@@ -50,9 +48,12 @@ class LinearExploration(LinearSchedule):
         """
         Args:
             env: gym environment
-            eps_begin: initial exploration
-            eps_end: end exploration
-            nsteps: number of steps between the two values of eps
+            eps_begin: float
+                initial exploration rate
+            eps_end: float
+                final exploration rate
+            nsteps: int
+                number of steps taken to linearly decay eps_begin to eps_end
         """
         self.env = env
         super(LinearExploration, self).__init__(eps_begin, eps_end, nsteps)
@@ -60,31 +61,34 @@ class LinearExploration(LinearSchedule):
 
     def get_action(self, best_action):
         """
-        Returns a random action with prob epsilon, otherwise return the best_action
+        Returns a random action with prob epsilon, otherwise returns the best_action
 
         Args:
-            best_action: (int) best action according some policy
+            best_action: int 
+                best action according some policy
         Returns:
             an action
         """
         ##############################################################
         """
         TODO: with probability self.epsilon, return a random action
-               else, return best_action
+                else, return best_action
 
-               you can access the environment stored in self.env
-               and epsilon with self.epsilon
+                you can access the environment via self.env
+
+                you may use env.action_space.sample() to generate 
+                a random action        
         """
         ##############################################################
         ################ YOUR CODE HERE - 4-5 lines ##################
-
-        temp = np.random.rand()
-        if temp < self.epsilon:
-            best_action = np.random.randint(self.env.action_space.n)
-        return best_action
+        if np.random.random_sample() <= self.epsilon:
+            action = self.env.action_space.sample();
+        else:
+            action = best_action
+        return action
 
         ##############################################################
-        ######################## END YOUR CODE ############## ########
+        ######################## END YOUR CODE #######################
 
 
 
@@ -97,6 +101,7 @@ def test1():
         rnd_act = exp_strat.get_action(0)
         if rnd_act != 0 and rnd_act is not None:
             found_diff = True
+
     assert found_diff, "Test 1 failed."
     print("Test1: ok")
 
@@ -119,7 +124,7 @@ def test3():
 
 def your_test():
     """
-    Use this to implement your own tests
+    Use this to implement your own tests if you'd like (not required)
     """
     pass
 
